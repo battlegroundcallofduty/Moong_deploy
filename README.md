@@ -1,9 +1,9 @@
 # Moong - 번개모임 SNS (개인 배포 버전)
 
 사용자가 즉시 모임을 생성하고 참여할 수 있는 번개 만남 중심 SNS 플랫폼.  
-5인 팀이 함께 개발한 프로젝트를 개인적으로 AWS EC2에 배포한 레포지토리입니다.
+5인 팀이 함께 개발한 프로젝트를 개인적으로 AWS EC2에 배포한 버전입니다.
 
-[원본 레포](https://github.com/battlegroundcallofduty/Moong_pro)
+[원본 레포](https://github.com/battlegroundcallofduty/Moong_pro) | [라이브 데모](https://moong.site)
 
 ---
 
@@ -45,3 +45,32 @@
 - `apps.py` — gunicorn 환경에서도 APScheduler 작동하도록 수정
 - `Procfile` — gunicorn 실행 명령 정의
 - migrations 파일 git 추적 활성화
+
+---
+
+## 배포 트러블슈팅
+
+**문제 1. 탄력적 IP 접속 불가**
+
+- nginx가 실행 중임에도 포트 80이 열리지 않아 접속이 안 됨.
+- 원인: `/etc/nginx/sites-enabled/` 폴더가 비어있었던 것.
+nginx는 이 폴더 안의 설정 파일만 읽기 때문에 아무 사이트도 서빙하지 않는 상태였음.
+
+```bash
+sudo ln -s /etc/nginx/sites-available/moong /etc/nginx/sites-enabled/moong
+sudo systemctl restart nginx
+```
+
+**문제 2. 502 Bad Gateway**
+
+- 탄력적 IP 접속 시 502 에러 발생.
+- 원인: nginx(`www-data` 유저)가 `/home/ubuntu/` 디렉토리에 접근 권한이 없어 gunicorn 소켓에 닿지 못함.
+
+```bash
+sudo chmod 755 /home/ubuntu
+```
+
+755 권한의 의미:
+- `7` (소유자 ubuntu): 읽기+쓰기+실행
+- `5` (그룹): 읽기+실행
+- `5` (그 외): 읽기+실행
